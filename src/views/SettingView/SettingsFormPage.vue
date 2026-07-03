@@ -44,21 +44,55 @@
       </div>
 
       <div v-if="page.rows" class="setting-form-table">
-        <SettingFormRow
+        <div
           v-for="row in page.rows"
           :key="row.label"
-          :row="row"
-        />
+          class="setting-form-row"
+        >
+          <div class="setting-form-label">{{ row.label }}</div>
+          <div class="setting-form-control">
+            <select v-if="row.type === 'select'" :value="row.value">
+              <option v-for="option in row.options" :key="option">{{ option }}</option>
+            </select>
+            <input
+              v-else-if="row.type === 'input' || row.type === 'password'"
+              :type="row.type === 'password' ? 'password' : 'text'"
+              :value="row.value"
+            />
+            <span v-else class="setting-text-value">{{ row.value }}</span>
+            <span v-if="row.hint" class="setting-hint">{{ row.hint }}</span>
+            <button v-if="row.button" type="button" class="setting-inline-action">
+              {{ row.button }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <template v-for="section in page.sections || []" :key="section.title">
         <div class="setting-section-title">{{ section.title }}</div>
         <div class="setting-form-table">
-          <SettingFormRow
+          <div
             v-for="row in section.rows"
             :key="`${section.title}-${row.label}`"
-            :row="row"
-          />
+            class="setting-form-row"
+          >
+            <div class="setting-form-label">{{ row.label }}</div>
+            <div class="setting-form-control">
+              <select v-if="row.type === 'select'" :value="row.value">
+                <option v-for="option in row.options" :key="option">{{ option }}</option>
+              </select>
+              <input
+                v-else-if="row.type === 'input' || row.type === 'password'"
+                :type="row.type === 'password' ? 'password' : 'text'"
+                :value="row.value"
+              />
+              <span v-else class="setting-text-value">{{ row.value }}</span>
+              <span v-if="row.hint" class="setting-hint">{{ row.hint }}</span>
+              <button v-if="row.button" type="button" class="setting-inline-action">
+                {{ row.button }}
+              </button>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -79,36 +113,8 @@
 </template>
 
 <script>
-const SettingFormRow = {
-  name: "SettingFormRow",
-  props: {
-    row: { type: Object, required: true },
-  },
-  template: `
-    <div class="setting-form-row">
-      <div class="setting-form-label">{{ row.label }}</div>
-      <div class="setting-form-control">
-        <select v-if="row.type === 'select'" :value="row.value">
-          <option v-for="option in row.options" :key="option">{{ option }}</option>
-        </select>
-        <input
-          v-else-if="row.type === 'input' || row.type === 'password'"
-          :type="row.type === 'password' ? 'password' : 'text'"
-          :value="row.value"
-        />
-        <span v-else class="setting-text-value">{{ row.value }}</span>
-        <span v-if="row.hint" class="setting-hint">{{ row.hint }}</span>
-        <button v-if="row.button" type="button" class="setting-inline-action">
-          {{ row.button }}
-        </button>
-      </div>
-    </div>
-  `,
-};
-
 export default {
   name: "SettingsFormPage",
-  components: { SettingFormRow },
   props: {
     page: { type: Object, required: true },
   },
