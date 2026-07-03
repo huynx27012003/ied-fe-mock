@@ -4,17 +4,14 @@ import Tabs from "../common/Tabs.vue";
 import ContextMenu from "../common/ContextMenu.vue";
 import ActivityBar from "../common/ActivityBar.vue";
 import SCLManage from "../common/SCLManage.vue";
-import PropertiesPane from "../common/PropertiesPane.vue";
-import AssetInfoView from "@/views/common/AssetInfoView.vue";
-import OvercurrentCurveDialog from "@/views/ParameterSettingView/OvercurrentCurveDialog.vue";
-import { findNodeById } from "@/api/treenode";
-import AddDevice from "@/views/AddDeviceView/AddDevice.vue";
-import AddOrganisation from "@/views/OrganisationView/AddOrganisation.vue";
-import AddSubstation from "@/views/OrganisationView/AddSubstation.vue";
-import AddVoltageLevel from "@/views/VoltageLevelView/AddVoltageLevel.vue";
-import AddBay from "@/views/BayView/AddBay.vue";
-import DeviceListView from "@/views/DeviceListView/DeviceListView.vue";
-import BulkIedImportDialog from "@/views/ImportIED/BulkIedImportDialog.vue";
+import DateTimeSetting from "@/views/SettingView/DateTimeSetting.vue";
+import PlantSetting from "@/views/SettingView/PlantSetting.vue";
+import WirelessNetworkSetting from "@/views/SettingView/WirelessNetworkSetting.vue";
+import WiredNetworkSetting from "@/views/SettingView/WiredNetworkSetting.vue";
+import Rs485Setting from "@/views/SettingView/Rs485Setting.vue";
+import ModbusTcpSetting from "@/views/SettingView/ModbusTcpSetting.vue";
+import ManagementSystemSetting from "@/views/SettingView/ManagementSystemSetting.vue";
+import PlaceholderSetting from "@/views/SettingView/PlaceholderSetting.vue";
 import {
   getEntityTreeRaw,
   getPropertiesById,
@@ -119,6 +116,16 @@ const REPORT_CONTROL_BLOCK_FIELDS = [
   { key: "owner", label: "Owner" },
 ];
 
+const ENERGY_MONITORING_MODES = new Set([
+  "site",
+  "smartLogger",
+  "logger",
+  "inverterGroup",
+  "inverter",
+  "meterGroup",
+  "meter",
+]);
+
 const SETTING_GROUP_FIELDS = [
   { key: "controlBlock", label: "Control Block" },
   { key: "numberOfSettingGroups", label: "Number of Setting Groups" },
@@ -151,16 +158,14 @@ export default {
     ContextMenu,
     ActivityBar,
     SCLManage,
-    PropertiesPane,
-    AssetInfoView,
-    OvercurrentCurveDialog,
-    AddDevice,
-    AddOrganisation,
-    AddSubstation,
-    AddVoltageLevel,
-    AddBay,
-    DeviceListView,
-    BulkIedImportDialog,
+    DateTimeSetting,
+    PlantSetting,
+    WirelessNetworkSetting,
+    WiredNetworkSetting,
+    Rs485Setting,
+    ModbusTcpSetting,
+    ManagementSystemSetting,
+    PlaceholderSetting,
   },
   computed: {
     ...mapGetters(["language"]),
@@ -178,6 +183,7 @@ export default {
     },
     sidebarTotalWidthPx() {
       if (this.sidebarCollapsed) return 0;
+      if (this.activeView === 'overview') return 0;
       if (this.activeView !== 'explorer') return this.ownerWidthPx;
       let width = this.ownerWidthPx;
       if (this.showSCL) width += this.sclWidthPx + 4; // +4 for resizer handle
@@ -187,36 +193,114 @@ export default {
     sclTargetName() {
       return this.sclTargetNode?.name || "IED";
     },
+    activeSettingComponent() {
+      const componentByItem = {
+        "date-time": "DateTimeSetting",
+        plant: "PlantSetting",
+        "wireless-network": "WirelessNetworkSetting",
+        "wired-network": "WiredNetworkSetting",
+        rs485: "Rs485Setting",
+        "modbus-tcp": "ModbusTcpSetting",
+        "management-system": "ManagementSystemSetting",
+      };
+      return componentByItem[this.activeSettingMenuItem] || "PlaceholderSetting";
+    },
   },
   provide() {
     return {
       sclImportStore: this.sclImportStore,
     };
   },
-
   data() {
     return {
       activeView: 'explorer',
+      activeSettingMenuItem: "date-time",
+      settingMenuGroups: [
+        {
+          id: "user-param",
+          label: "User Param.",
+          expanded: true,
+          children: [
+            { id: "date-time", label: "Date&Time" },
+            { id: "plant", label: "Plant" },
+            { id: "revenue", label: "Revenue" },
+            { id: "save-period", label: "Save Period" },
+          ],
+        },
+        {
+          id: "comm-param",
+          label: "Comm. Param.",
+          expanded: true,
+          children: [
+            { id: "wireless-network", label: "Wireless Network" },
+            { id: "wired-network", label: "Wired Network" },
+            { id: "rs485", label: "RS485" },
+            { id: "management-system", label: "Management System" },
+            { id: "modbus-tcp", label: "Modbus TCP" },
+            { id: "iec103", label: "IEC103" },
+            { id: "iec104", label: "IEC104" },
+            { id: "ftp", label: "FTP" },
+            { id: "email", label: "Email" },
+            { id: "goose", label: "GOOSE" },
+            { id: "sppc", label: "SPPC" },
+          ],
+        },
+        {
+          id: "power-adjustment",
+          label: "Power Adjustment",
+          expanded: false,
+          children: [
+            { id: "active-power-control", label: "Active Power Control" },
+            { id: "reactive-power-control", label: "Reactive Power Control" },
+          ],
+        },
+        {
+          id: "battery-control",
+          label: "Battery Control",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "remote-shutdown",
+          label: "Remote Shutdown",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "di",
+          label: "DI",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "alarm-output",
+          label: "Alarm Output",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "smart-tracking",
+          label: "Smart Tracking Algorithm",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "feature-parameters",
+          label: "Feature Parameters",
+          expanded: false,
+          children: [],
+        },
+        {
+          id: "other-parameters",
+          label: "Other Parameters",
+          expanded: false,
+          children: [],
+        },
+      ],
       menuVisible: false,
       menuPosition: { x: 0, y: 0 },
       selectedNode: {},
       tree: [],
-      addDeviceDialogVisible: false,
-      addOrganisationDialogVisible: false,
-      addSubstationDialogVisible: false,
-      addVoltageLevelDialogVisible: false,
-      showAssetInfoDialogVisible: false,
-      compareOvercurrentDialogVisible: false,
-      addDeviceNode: null,
-      addOrganisationNode: null,
-      addSubstationNode: null,
-      addVoltageLevelNode: null,
-      showAssetInfoNode: null,
-      compareOvercurrentIeds: [],
-      addBayDialogVisible: false,
-      addBayNode: null,
-      bulkIedImportDialogVisible: false,
-      bulkIedImportNode: null,
       currentNodeId: null,
       activeTab: {},
       tabs: [],
@@ -342,7 +426,6 @@ export default {
       count: "",
       selectedParameterId: null,
       ownerServerList: [],
-      clipboardAsset: null,
       ownerTreeLoading: false,
       ownerTreeLoaded: false,
       // Cache thông tin IED theo iedId để tránh gọi lại API nhiều lần
@@ -444,6 +527,14 @@ export default {
       }
       this.activeView = viewName;
     },
+    toggleSettingGroup(group) {
+      if (!group) return;
+      group.expanded = !group.expanded;
+    },
+    selectSettingMenuItem(item) {
+      if (!item?.id) return;
+      this.activeSettingMenuItem = item.id;
+    },
     // Translation method
     $t(key, params = {}) {
       const currentLang = this.language || "en-vi";
@@ -478,158 +569,37 @@ export default {
 
     handleNodeDblClick(node) {
       if (!node) return;
-      if (node.mode === "ied") {
-        const existingTab = this.tabs.find((t) => t.node?.id === node.id);
-        if (existingTab) {
-          this.handleUpdateFocus({ iedId: node.id, focusNode: node });
-        } else {
-          const tab = {
-            id: node.id,
-            name: node.name,
-            mode: node.mode,
-            component: "SystemSettingTab",
-            node,
-            focusNode: node,
-          };
-          this.handleOpenTab(tab);
-        }
-        return;
-      }
-
-      const focusModes = new Set([
-        "protectionFunction",
-        "protectionLevel",
-        "protectionGroup",
-        "settingFunction",
-        "systemSetting",
-        "lineParameters",
-      ]);
-
-      if (focusModes.has(node.mode)) {
-        const ancestorIed = getAncestorByMode(
-          this.ownerServerList,
-          node.id,
-          "ied"
-        );
-        if (!ancestorIed) return;
-
-        const existingTab = this.tabs.find(
-          (t) => t.node?.id === ancestorIed.id
-        );
-
-        if (existingTab) {
-          this.handleUpdateFocus({
-            iedId: ancestorIed.id,
-            focusNode: node,
-          });
-        } else {
-          const tab = {
-            id: ancestorIed.id,
-            name: ancestorIed.name,
-            mode: ancestorIed.mode,
-            component: "SystemSettingTab",
-            node: ancestorIed,
-            focusNode: node,
-          };
-          this.handleOpenTab(tab);
-        }
-      }
+      this.openEnergyMonitoringTab(node);
     },
 
-    handleUpdateFocus(payload) {
-      if (!payload || !payload.iedId) {
-        console.warn("handleUpdateFocus: payload invalid", payload);
-        return;
-      }
+    openEnergyMonitoringTab(node) {
+      if (!node || !ENERGY_MONITORING_MODES.has(node.mode)) return;
 
-      const { iedId, focusNode, action } = payload;
-      this.closeContextMenu();
-
-      const hardwareTabId = `${iedId}-hardware`;
-      const paramTabId = iedId;
-
-      const findIedNode = () => {
-        try {
-          return this.findNodeById(this.ownerServerList, iedId);
-        } catch {
-          return null;
-        }
-      };
-      const iedNode = findIedNode();
-      const iedName =
-        iedNode?.name ||
-        focusNode?.name ||
-        (this.activeTab?.name ? this.activeTab.name.split(" - ")[0] : "IED");
-
-      if (action === "hardware") {
-        let tab =
-          this.tabs.find(
-            (t) =>
-              t.id === hardwareTabId ||
-              (t.component === "HardWareInfoView" && t.node?.id === iedId)
-          ) || null;
-
-        if (!tab) {
-          tab = {
-            id: hardwareTabId,
-            name: `${iedName} - Hardware Information`,
-            mode: iedNode?.mode || "ied",
-            component: "HardWareInfoView",
-            node: iedNode || { id: iedId, name: iedName },
-            focusNode: iedNode || { id: iedId, name: iedName },
-          };
-          this.tabs.push(tab);
-        } else {
-          tab.component = "HardWareInfoView";
-          tab.name = `${iedName} - Hardware Information`;
-          tab.node = iedNode || tab.node;
-          tab.focusNode = iedNode || tab.focusNode;
-        }
-
-        this.activeTab = { ...tab };
-        return;
-      }
-
-      const focusModes = new Set([
-        "ied",
-        "protectionFunction",
-        "protectionLevel",
-        "protectionGroup",
-        "settingFunction",
-        "systemSetting",
-        "lineParameters",
-      ]);
-
-      let tab =
-        this.tabs.find(
-          (t) =>
-            t.id === paramTabId ||
-            (t.node?.id === iedId && t.component === "SystemSettingTab")
-        ) || null;
+      const tabId = `energy-monitoring-${node.id}`;
+      let tab = this.tabs.find((t) => t.id === tabId);
 
       if (!tab) {
         tab = {
-          id: paramTabId,
-          name: `${iedName} - Parameter Settings`,
-          mode: iedNode?.mode || "ied",
-          component: "SystemSettingTab",
-          node: iedNode || { id: iedId, name: iedName },
-          focusNode: focusNode || iedNode,
+          id: tabId,
+          name: `${node.name} - Monitoring`,
+          mode: node.mode,
+          component: "EnergyMonitoringTab",
+          node,
+          focusNode: node,
         };
         this.tabs.push(tab);
-      } else if (
-        action === "parameter" ||
-        (focusNode && focusModes.has(focusNode.mode))
-      ) {
-        tab.component = "SystemSettingTab";
-        tab.name = `${iedName} - Parameter Settings`;
-      }
-
-      if (focusNode) {
-        tab.focusNode = focusNode;
+      } else {
+        tab.name = `${node.name} - Monitoring`;
+        tab.node = node;
+        tab.focusNode = node;
       }
 
       this.activeTab = { ...tab };
+    },
+
+    handleUpdateFocus(payload) {
+      if (!payload) return;
+      this.closeContextMenu();
     },
     async resetAllServer() {
       this.pathMapServer = [];
@@ -816,32 +786,6 @@ export default {
       if (!node) return;
       node.expanded = !node.expanded;
     },
-    handleAddGroup(node) {
-      if (!node) return;
-      const children = Array.isArray(node.children)
-        ? node.children
-        : Array.isArray(node.childrenFromData)
-          ? node.childrenFromData
-          : [];
-      const groups = children.filter((c) => c.mode === "protectionGroup");
-      const current = Number(node.groupVisibleCount || 1);
-      const next = Math.min(current + 1, groups.length || current + 1);
-      node.groupVisibleCount = next;
-      node.showAllGroups = false;
-      this.$forceUpdate();
-    },
-    handleShowAllGroup(node) {
-      if (!node) return;
-      const children = Array.isArray(node.children)
-        ? node.children
-        : Array.isArray(node.childrenFromData)
-          ? node.childrenFromData
-          : [];
-      const groups = children.filter((c) => c.mode === "protectionGroup");
-      node.groupVisibleCount = groups.length || 0;
-      node.showAllGroups = true;
-      this.$forceUpdate();
-    },
     handleRenameNode({ id, newName }) {
       const updateNodeName = (nodes) => {
         for (const n of nodes) {
@@ -857,74 +801,8 @@ export default {
       updateNodeName(this.ownerServerList);
       this.$forceUpdate();
     },
-    handleStartRename(node) {
-      this.renamingNodeId = node?.id || null;
-    },
     handleCancelRename() {
       this.renamingNodeId = null;
-    },
-    openAddDeviceDialog(node) {
-      this.addDeviceNode = node || null;
-      this.addDeviceDialogVisible = true;
-    },
-    openAddOrganisationDialog(node) {
-      this.addOrganisationNode = node || null;
-      this.addOrganisationDialogVisible = true;
-    },
-    openAddSubstationDialog(node) {
-      this.addSubstationNode = node || null;
-      this.addSubstationDialogVisible = true;
-    },
-    openShowAssetDialog(node) {
-      this.showAssetInfoNode = node || null;
-      this.showAssetInfoDialogVisible = true;
-    },
-    openOvercurrentCompareDialog(payload) {
-      const source = payload?.source;
-      const target = payload?.target;
-      if (!source?.id || !target?.id) {
-        this.$message?.warning?.(this.$tUi('cannotDetermineIedOvercurrent'));
-        return;
-      }
-
-      this.compareOvercurrentIeds = [source, target];
-      this.compareOvercurrentDialogVisible = true;
-    },
-    openAddVoltageLevelDialog(node) {
-      this.addVoltageLevelNode = node || null;
-      this.addVoltageLevelDialogVisible = true;
-    },
-    onDeviceCreated() {
-      this.addDeviceDialogVisible = false;
-      this.reloadTree();
-    },
-    onOrganisationCreated() {
-      this.addOrganisationDialogVisible = false;
-      this.reloadTree();
-    },
-    onSubstationCreated() {
-      this.addSubstationDialogVisible = false;
-      this.reloadTree();
-    },
-    onVoltageLevelCreated() {
-      this.addVoltageLevelDialogVisible = false;
-      this.reloadTree();
-    },
-    openAddBayDialog(node) {
-      this.addBayNode = node;
-      this.addBayDialogVisible = true;
-    },
-    onBayCreated() {
-      this.addBayDialogVisible = false;
-      this.reloadTree();
-    },
-    openBulkIedImportDialog(node) {
-      this.bulkIedImportNode = node || null;
-      this.bulkIedImportDialogVisible = true;
-    },
-    async onBulkIedImportComplete() {
-      this.iedInfoCache = {};
-      await this.reloadTree();
     },
     openSidebar() {
       this.sidebarCollapsed = false;
@@ -1140,6 +1018,10 @@ export default {
     },
 
     async showPropertiesData(node) {
+      if (ENERGY_MONITORING_MODES.has(node?.mode)) {
+        this.openEnergyMonitoringTab(node);
+      }
+
       // Default properties view
       this.propertiesPaneTab = "object";
       this.handleControlBlockUpdate(node);
@@ -1319,9 +1201,6 @@ export default {
       this.properties = this.selectedId
         ? getPropertiesById(this.ownerServerList, this.selectedId)
         : EMPTY_PROPS();
-    },
-    setClipboardAsset(payload) {
-      this.clipboardAsset = payload || null;
     },
   },
   async mounted() {

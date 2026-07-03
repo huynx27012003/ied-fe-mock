@@ -72,6 +72,44 @@ export default {
   border-top: 1px solid rgba(176, 203, 233, 0.45) !important;
 }
 
+.viewport-dialog-overlay .el-overlay-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 12px;
+  overflow: hidden !important;
+}
+
+.viewport-dialog-overlay .el-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 24px);
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+.viewport-dialog-overlay .viewport-fit-dialog {
+  max-width: calc(100vw - 24px);
+}
+
+.viewport-dialog-overlay .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+@media (max-height: 640px) {
+  .viewport-dialog-overlay .el-overlay-dialog {
+    padding: 8px;
+  }
+
+  .viewport-dialog-overlay .el-dialog {
+    max-height: calc(100vh - 16px);
+  }
+}
+
 html,
 body {
   margin: 0;

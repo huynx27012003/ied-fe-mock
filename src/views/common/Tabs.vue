@@ -45,8 +45,7 @@
             :class="{
               visible:
                 hoveredTab === tab?.id ||
-                modelActive?.id === tab?.id ||
-                tab?.component === 'SettingCompareTab',
+                modelActive?.id === tab?.id,
             }"
             @click.stop="closeTab(index)"
             >✖</span
@@ -87,25 +86,11 @@
 import { defineAsyncComponent } from 'vue'
 
 // Lazy load tab components
-const SystemSettingTab = defineAsyncComponent(() => import("@/views/ParameterSettingView/SystemSettingTab.vue"));
-const TestManagementTab = defineAsyncComponent(() => import("@/views/GroupView/TestManagementTab.vue"));
-const AddDevice = defineAsyncComponent(() => import("@/views/AddDeviceView/AddDevice.vue"));
-const OwnerView = defineAsyncComponent(() => import("@/views/OrganisationView/index.vue"));
-const AddOrganisation = defineAsyncComponent(() => import("@/views/OrganisationView/AddOrganisation.vue"));
-const AddSubstation = defineAsyncComponent(() => import("@/views/OrganisationView/AddSubstation.vue"));
-const SubstationView = defineAsyncComponent(() => import("@/views/OrganisationView/Substation.vue"));
-const HardWareInfoView = defineAsyncComponent(() => import("@/views/HardWareInfomation/HardWareInfoView.vue"));
-const AddVoltageLevel = defineAsyncComponent(() => import("@/views/VoltageLevelView/AddVoltageLevel.vue"));
-const VoltageLevelView = defineAsyncComponent(() => import("@/views/VoltageLevelView/VoltageLevel.vue"));
-const DeviceListView = defineAsyncComponent(() => import("@/views/DeviceListView/DeviceListView.vue"));
-const SCLManagementTab = defineAsyncComponent(() => import("@/views/SCLManagementView/SCLManagementTab.vue"));
-const SCLImportSubtreeTab = defineAsyncComponent(() => import("@/views/SCLManagementView/SCLImportSubtreeTab.vue"));
-const SettingCompareTab = defineAsyncComponent(() => import("@/views/SettingCompareView/SettingCompareTab.vue"));
-const CommunicationServicesTab = defineAsyncComponent(() => import("@/views/CommunicationView/CommunicationServicesTab.vue"));
+const EnergyMonitoringTab = defineAsyncComponent(() => import("@/views/EnergyMonitoringView/EnergyMonitoringTab.vue"));
 
 export default {
   name: "Tabs",
-  components: { SystemSettingTab, TestManagementTab, AddDevice, OwnerView, AddOrganisation, AddSubstation, SubstationView, HardWareInfoView, AddVoltageLevel, VoltageLevelView, DeviceListView, SCLManagementTab, SCLImportSubtreeTab, SettingCompareTab, CommunicationServicesTab },
+  components: { EnergyMonitoringTab },
 
   props: {
     modelValue: { type: Object, default: () => ({}) },
@@ -227,29 +212,9 @@ export default {
     },
 
     checkTab(tab) {
-      if (
-        tab?.component === "DeviceListView" ||
-        tab?.type === "deviceList" ||
-        String(tab?.id || "").endsWith("-deviceList")
-      ) {
-        return "DeviceListView";
-      }
-      if (tab?.component === "SystemSettingTab") return "SystemSettingTab";
-      if (tab?.component === "TestManagementTab") return "TestManagementTab";
-      if (tab?.component === "AddDevice") return "AddDevice";
-      if (tab?.component === "AddOrganisation") return "AddOrganisation";
-      if (tab?.component === "AddSubstation") return "AddSubstation";
-      if (tab?.component === "SubstationView") return "SubstationView";
-      if (tab?.component === "AddVoltageLevel") return "AddVoltageLevel";
-      if (tab?.component === "VoltageLevelView") return "VoltageLevelView";
-      if (tab?.component === "HardWareInfoView") return "HardWareInfoView";
-      if (tab?.component === "SCLManagementTab") return "SCLManagementTab";
-      if (tab?.component === "CommunicationServicesTab") return "CommunicationServicesTab";
-      if (tab?.component === "SCLImportSubtreeTab") return "SCLImportSubtreeTab";
-      if (tab?.component === "SettingCompareTab") return "SettingCompareTab";
+      if (tab?.component === "EnergyMonitoringTab") return "EnergyMonitoringTab";
 
       if (this.dataType.includes(tab?.mode)) return "LocationViewData";
-      if (tab?.component === "OwnerView") return "OwnerView";
       if (tab?.asset !== undefined) {
         if (tab.asset === "Transformer") return "Transformer";
         if (tab.asset === "Circuit breaker") return "CircuitBreaker";

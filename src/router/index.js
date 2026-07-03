@@ -34,8 +34,19 @@ const router = createRouter({
   routes,
 })
 
+const TEMP_BYPASS_LOGIN = true
+
 // Navigation Guard
 router.beforeEach((to, from, next) => {
+  if (TEMP_BYPASS_LOGIN) {
+    if (to.name === 'login') {
+      next({ name: 'tree' })
+      return
+    }
+    next()
+    return
+  }
+
   const isAuth = store.state.isAuthenticated
 
   if (to.meta.requiresAuth && !isAuth) {

@@ -1,31 +1,86 @@
-﻿import client from '@/api/client';
-import { logApiError } from '@/helpers/apiFeedback';
+﻿const MOCK_ENTITY_TREE = [
+  {
+    id: 'site-01',
+    name: 'Site 1',
+    mode: 'site',
+    expanded: true,
+    children: [
+      {
+        id: 'site-01-smartlogger',
+        name: 'SmartLogger3000',
+        mode: 'smartLogger',
+        expanded: true,
+        children: [
+          {
+            id: 'site-01-smartlogger-local',
+            name: 'Logger(Local)',
+            mode: 'logger',
+            status: 'online',
+            children: [],
+          },
+        ],
+      },
+      {
+        id: 'site-01-inverter',
+        name: 'Inverter',
+        mode: 'inverterGroup',
+        expanded: true,
+        children: [
+          {
+            id: 'site-01-inverter-com1-1',
+            name: 'Inverter(COM1-1)',
+            mode: 'inverter',
+            status: 'online',
+            children: [],
+          },
+          {
+            id: 'site-01-inverter-com1-12',
+            name: 'Inverter(COM1-12)',
+            mode: 'inverter',
+            status: 'online',
+            children: [],
+          },
+          {
+            id: 'site-01-inverter-com1-13',
+            name: 'Inverter(COM1-13)',
+            mode: 'inverter',
+            status: 'online',
+            children: [],
+          },
+          {
+            id: 'site-01-inverter-com1-14',
+            name: 'Inverter(COM1-14)',
+            mode: 'inverter',
+            status: 'online',
+            children: [],
+          },
+        ],
+      },
+      {
+        id: 'site-01-meter',
+        name: 'Meter',
+        mode: 'meterGroup',
+        expanded: true,
+        children: [
+          {
+            id: 'site-01-meter-com2-11',
+            name: 'Meter(COM2-11)',
+            mode: 'meter',
+            status: 'online',
+            children: [],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+function cloneMockEntityTree() {
+  return JSON.parse(JSON.stringify(MOCK_ENTITY_TREE));
+}
 
 export async function getEntityTreeRaw() {
-  try {
-    const response = await client.get('/entity-tree', {
-      headers: { accept: 'application/json' }
-    });
-
-    // Lọc bỏ các node con có name là "Lockout Signal" nếu node cha có name là "Auto Reclose"
-    const filterAutoRecloseChildren = (node) => {
-      if (node.name === 'Auto Reclose') {
-        node.children = node.children.filter(child => child.name !== 'Lockout Signal');
-      }
-      if (node.children?.length) {
-        node.children.forEach(filterAutoRecloseChildren);
-      }
-      return node;
-    };
-
-    // Áp dụng lọc cho mỗi node trong cây
-    const filteredData = Array.isArray(response.data) ? response.data.map(filterAutoRecloseChildren) : [];
-
-    return filteredData;
-  } catch (error) {
-    logApiError(error, 'getEntityTreeRaw: Error');
-    throw error;
-  }
+  return cloneMockEntityTree();
 }
 
 export async function getEntityTree() {

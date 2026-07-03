@@ -5,6 +5,7 @@ import { emitApiRequestEnd, emitApiRequestStart } from '@/helpers/apiActionFeedb
 
 const CLIENT_ID = '1005'
 const TOKEN_NAME_PREFIX = 'smart-sso-token-'
+const TEMP_BYPASS_LOGIN = true
 
 const toApiBase = (addr) => {
   if (!addr) return '/api'
@@ -73,6 +74,11 @@ store.watch(
   }
 )
 function clearAuthAndRedirect() {
+  if (TEMP_BYPASS_LOGIN) {
+    // Temporary login bypass for UI work. Set TEMP_BYPASS_LOGIN to false to restore redirect.
+    return;
+  }
+
   try {
     localStorage.removeItem('accessToken' + CLIENT_ID);
     localStorage.removeItem('refreshToken' + CLIENT_ID);

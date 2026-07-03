@@ -11,39 +11,11 @@
         <div class="activity-bar-fixed">
           <ActivityBar
             :active-view="activeView"
-            :sidebar-collapsed="sidebarCollapsed"
             @view-change="setActiveView"
-            @toggle-sidebar="toggleSidebar"
           />
         </div>
 
         <div class="main-column">
-          <div v-show="!clientSlide" class="toolbar">
-            <div style="display: flex; align-items: center">
-              <div @click="resetAllServer" class="path-hover">{{ $t("home") }}</div>
-              <i
-                v-if="pathMapServer.length"
-                style="margin-left: 10px"
-                class="fa-solid fa-angle-right"
-              ></i>
-            </div>
-
-            <div
-              style="display: flex; align-items: center"
-              v-for="(item, index) in pathMapServer"
-              :key="index"
-            >
-              <div @click="resetPathServer(index)" class="path-hover">
-                {{ item.parent }}
-              </div>
-              <i
-                v-if="index < pathMapServer.length - 1"
-                style="margin-left: 10px"
-                class="fa-solid fa-angle-right"
-              ></i>
-            </div>
-          </div>
-
           <div class="activity-bar-wrapper">
             <div class="resizable-sidebar">
         <!-- Sidebar Server -->
@@ -58,7 +30,7 @@
             <div class="title-temp" v-if="!sidebarCollapsed">
               <div ref="tabContainer" class="tab-container tab-with-actions">
                 <div ref="ownerRootServer" @click="showOwnerServerRoot" class="tab">
-                  {{ $t("owner") }}
+                  Monitoring
                 </div>
               </div>
             </div>
@@ -70,14 +42,6 @@
               </div>
               <div v-else-if="ownerTreeLoaded && !renderOwnerList.length" class="empty-owner-message">
                 <p>{{ $tUi('noOrganisationFound') }}</p>
-                <button
-                  type="button"
-                  class="empty-owner-add-btn"
-                  @click="openAddOrganisationDialog(null)"
-                >
-                  <i class="fa-solid fa-sitemap"></i>
-                  {{ $tUi('addOrganisationBtn') }}
-                </button>
               </div>
               <ul v-else-if="renderOwnerList.length">
                 <TreeNode
@@ -234,11 +198,50 @@
           ></div>
           </div>
 
+          <div v-show="activeView === 'setting'" class="setting-sidebar-view">
+            <div class="setting-menu">
+              <div
+                v-for="group in settingMenuGroups"
+                :key="group.id"
+                class="setting-menu-group"
+              >
+                <button
+                  type="button"
+                  class="setting-menu-group-header"
+                  :class="{ collapsed: !group.expanded }"
+                  @click="toggleSettingGroup(group)"
+                >
+                  <i
+                    class="fa-solid setting-menu-toggle"
+                    :class="group.expanded ? 'fa-square-minus' : 'fa-square-plus'"
+                  ></i>
+                  <span>{{ group.label }}</span>
+                </button>
+
+                <div v-show="group.expanded" class="setting-menu-children">
+                  <button
+                    v-for="item in group.children"
+                    :key="item.id"
+                    type="button"
+                    class="setting-menu-item"
+                    :class="{ active: activeSettingMenuItem === item.id }"
+                    @click="selectSettingMenuItem(item)"
+                  >
+                    <span>{{ item.label }}</span>
+                    <i
+                      v-if="activeSettingMenuItem === item.id"
+                      class="fa-solid fa-caret-right setting-menu-active-arrow"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div v-show="activeView === 'sclImport'" class="activity-view-container">
             <SCLManage
               mode="global"
               layout="tree"
-              @open-subtree-tab="openSclImportSubtreeTab"
               @open-context-menu="openContextMenu"
               @control-block-update="handleControlBlockUpdate"
             />
@@ -248,20 +251,96 @@
       <!-- Collapsed Handle moved to ActivityBar -->
       <div
         @mousedown="startResizeServer"
-        v-if="!clientSlide && !sidebarCollapsed"
+        v-if="!clientSlide && !sidebarCollapsed && activeView !== 'overview'"
         ref="resizerServer"
         class="resizer"
       ></div>
       <div
         ref="contextDataServer"
         v-show="!clientSlide"
-        :class="['context-data', { 'full-width': sidebarCollapsed }]"
-        :style="sidebarCollapsed ? { width: '100%' } : {}"
+        :class="['context-data', { 'full-width': sidebarCollapsed || activeView === 'overview' }]"
+        :style="(sidebarCollapsed || activeView === 'overview') ? { width: '100%' } : {}"
       >
         <div ref="contentData" class="content-data">
           <div ref="content" class="content">
-            <div class="title-content"></div>
-            <div class="content-content">
+            <template v-if="activeView === 'overview'">
+              <div class="overview-direct-page">
+                <div class="overview-direct-title">
+                  <div>
+                    <div class="overview-direct-heading">Overview</div>
+                    <div class="overview-direct-subtitle">Mock overview data</div>
+                  </div>
+                  <div class="overview-direct-time">2026-07-01 16:22</div>
+                </div>
+
+                <div class="overview-direct-body">
+                  <div class="overview-plant-panel">
+                    <div class="overview-plant-icon">
+                      <i class="fa-solid fa-solar-panel"></i>
+                    </div>
+                    <div class="overview-plant-table">
+                      <div class="overview-plant-row">
+                        <span>Plant name</span>
+                        <strong>Site 1</strong>
+                      </div>
+                      <div class="overview-plant-row">
+                        <span>Plant address</span>
+                        <strong>Demo address</strong>
+                      </div>
+                      <div class="overview-plant-row">
+                        <span>Number of inverters</span>
+                        <strong>4</strong>
+                      </div>
+                      <div class="overview-plant-row">
+                        <span>Total rated power</span>
+                        <strong>400.000kW</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="overview-metric-table">
+                    <div
+                      v-for="metric in [
+                        { label: 'Active power', value: '73.82kW' },
+                        { label: 'Reactive power', value: '0.81kVar' },
+                        { label: 'Load power', value: '424.53kW' },
+                        { label: 'Grid-tied active power', value: '350.70kW' },
+                        { label: 'Grid-tied reactive power', value: '109.20kVar' },
+                        { label: 'Energy yield of current day', value: '1.22MWh' },
+                        { label: 'Current Day Consumption', value: '5.96MWh' },
+                        { label: 'Current Day Feed-in to Grid', value: '0.00kWh' },
+                        { label: 'Current Day Supply From Grid', value: '4.74MWh' },
+                        { label: 'Total energy yield', value: '253.72MWh' },
+                      ]"
+                      :key="metric.label"
+                      class="overview-metric-cell"
+                    >
+                      <div class="overview-metric-label">{{ metric.label }}</div>
+                      <div class="overview-metric-value">{{ metric.value }}</div>
+                    </div>
+                  </div>
+
+                  <div class="overview-chart-panel">
+                    <div class="overview-chart-axis overview-chart-y"></div>
+                    <div class="overview-chart-axis overview-chart-x"></div>
+                    <svg viewBox="0 0 600 180" preserveAspectRatio="none" aria-hidden="true">
+                      <polyline
+                        points="0,145 60,138 120,118 180,132 240,88 300,102 360,54 420,98 480,80 540,116 600,90"
+                        fill="none"
+                        stroke="#4aa3a2"
+                        stroke-width="3"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else-if="activeView === 'setting'">
+              <component :is="activeSettingComponent" />
+            </template>
+            <template v-else>
+              <div class="title-content"></div>
+              <div class="content-content">
               <Tabs
                 ref="tabsServer"
                 :side="'server'"
@@ -275,31 +354,15 @@
                 @node-dblclick="handleNodeDblClick"
                 @control-block-update="handleControlBlockUpdate"
               />
-            </div>
+              </div>
+            </template>
           </div>
            <div
+             v-if="activeView !== 'overview'"
              @mousedown="startResizeContentServer"
              ref="resizerContentServer"
              class="resizer"
            ></div>
-            <PropertiesPane
-              v-if="propertiesSign"
-              ref="properties"
-              v-model:paneTab="propertiesPaneTab"
-              :properties="properties"
-              :asset-property-sign="assetPropertySign"
-              :information="Information"
-              :control-block-attribute-rows="controlBlockAttributeRows"
-              :control-block-title="controlBlockTitle"
-              :control-block-visible="controlBlockVisible"
-              :t="$t"
-              @hide="hideProperties"
-            />
-           <div
-             v-if="!propertiesSign"
-             @click="showProperties"
-             class="trapezoid"
-          ></div>
         </div>
       </div>
             </div> <!-- Close resizable-sidebar -->
@@ -312,138 +375,10 @@
       :visible="contextMenuVisible"
       :position="contextMenuPosition"
       :selectedNode="rightClickNode"
-      :tree="ownerServerList"
-      :clipboard-asset="clipboardAsset"
       @refresh-tree="reloadTree"
-      @set-clipboard="setClipboardAsset"
       @close="closeContextMenu"
-      @open-tab="handleOpenTab"
-      @update-focus="handleUpdateFocus"
-      @open-add-device="openAddDeviceDialog"
-      @open-add-organisation="openAddOrganisationDialog"
-      @open-add-substation="openAddSubstationDialog"
-      @open-show-organisation="openShowAssetDialog"
-      @open-show-substation="openShowAssetDialog"
-      @open-show-voltagelevel="openShowAssetDialog"
-      @open-show-bay="openShowAssetDialog"
-      @open-show-ied="openShowAssetDialog"
-      @open-overcurrent-compare="openOvercurrentCompareDialog"
-      @open-add-voltage-level="openAddVoltageLevelDialog"
-      @open-add-bay="openAddBayDialog"
-      @open-bulk-ied-import="openBulkIedImportDialog"
-      @add-group="handleAddGroup"
-      @show-all-group="handleShowAllGroup"
-      @start-rename="handleStartRename"
     />
 
-    <el-dialog
-      v-model="addDeviceDialogVisible"
-      :title="$tUi('addDeviceTitle')"
-      width="60%"
-      :close-on-click-modal="true"
-      :destroy-on-close="true"
-    >
-      <AddDevice
-        v-if="addDeviceDialogVisible"
-        :ownerData="{ node: addDeviceNode }"
-        @device-created="onDeviceCreated"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="addOrganisationDialogVisible"
-      :title="$tUi('addOrganisationTitle')"
-      width="70%"
-      :close-on-click-modal="true"
-      :destroy-on-close="true"
-    >
-      <AddOrganisation
-        v-if="addOrganisationDialogVisible"
-        :ownerData="addOrganisationNode ? { node: addOrganisationNode } : {}"
-        @refresh-tree="onOrganisationCreated"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="addSubstationDialogVisible"
-      :title="$tUi('addSubstationTitle')"
-      width="70%"
-      :close-on-click-modal="true"
-      :destroy-on-close="true"
-    >
-      <AddSubstation
-        v-if="addSubstationDialogVisible"
-        :ownerData="addSubstationNode ? { node: addSubstationNode } : {}"
-        @refresh-tree="onSubstationCreated"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="addVoltageLevelDialogVisible"
-      :title="$tUi('addVoltageLevelTitle')"
-      width="70%"
-      :close-on-click-modal="true"
-      :destroy-on-close="true"
-    >
-      <AddVoltageLevel
-        v-if="addVoltageLevelDialogVisible"
-        :ownerData="addVoltageLevelNode ? { node: addVoltageLevelNode } : {}"
-        @refresh-tree="onVoltageLevelCreated"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="addBayDialogVisible"
-      :title="$tUi('addBayTitle')"
-      width="50%"
-      destroy-on-close
-    >
-      <AddBay
-        v-if="addBayDialogVisible"
-        :nodeData="addBayNode"
-        @cancel="addBayDialogVisible = false"
-        @success="onBayCreated"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="bulkIedImportDialogVisible"
-      :title="$t('importIed')"
-      width="88%"
-      class="bulk-ied-import-dialog"
-      :close-on-click-modal="false"
-      :destroy-on-close="true"
-    >
-      <BulkIedImportDialog
-        v-if="bulkIedImportDialogVisible"
-        :substation-node="bulkIedImportNode"
-        :tree="ownerServerList"
-        @close="bulkIedImportDialogVisible = false"
-        @import-complete="onBulkIedImportComplete"
-      />
-    </el-dialog>
-
-    <el-dialog
-      v-model="showAssetInfoDialogVisible"
-      title=""
-      width="80%"
-      class="asset-info-dialog"
-      :show-close="false"
-      :close-on-click-modal="true"
-      :destroy-on-close="true"
-    >
-      <AssetInfoView
-        v-if="showAssetInfoDialogVisible"
-        :ownerData="showAssetInfoNode ? { node: showAssetInfoNode } : {}"
-        @close="showAssetInfoDialogVisible = false"
-        @refresh-tree="reloadTree"
-      />
-    </el-dialog>
-
-    <OvercurrentCurveDialog
-      v-model="compareOvercurrentDialogVisible"
-      :compare-ieds="compareOvercurrentIeds"
-    />
   </div>
 </template>
 
@@ -557,8 +492,8 @@
 
 .sidebar {
   width: 20%;
-  background-color: white;
-  color: #555;
+  background: #f7fbff;
+  color: #31435c;
   flex-shrink: 0;
   height: 100%;
   box-sizing: border-box;
@@ -567,6 +502,7 @@
   position: relative;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  box-shadow: inset -1px 0 0 #d7e4f5;
 }
 .sidebar.no-transition {
   transition: none !important;
@@ -670,6 +606,211 @@
   overflow: auto;
 }
 
+.overview-direct-page {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+
+.overview-direct-title {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border: 1px solid #dcdcdc;
+  border-bottom: none;
+  box-sizing: border-box;
+  background: #f7f7f7;
+}
+
+.overview-direct-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.overview-direct-subtitle,
+.overview-direct-time {
+  margin-top: 2px;
+  color: #777;
+  font-size: 12px;
+}
+
+.overview-direct-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #dcdcdc;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.overview-plant-panel {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  border: 1px solid #d9d9d9;
+  background: #fff;
+}
+
+.overview-plant-icon {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #d9d9d9;
+  background: #eef3f8;
+  color: #1e3c72;
+  font-size: 58px;
+}
+
+.overview-plant-table {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.overview-plant-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  min-height: 34px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.overview-plant-row:last-child {
+  border-bottom: none;
+}
+
+.overview-plant-row span,
+.overview-plant-row strong {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-weight: 400;
+}
+
+.overview-plant-row span {
+  border-right: 1px solid #e5e5e5;
+}
+
+.overview-metric-table {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 10px;
+  border: 1px solid #d9d9d9;
+  border-right: none;
+  border-bottom: none;
+}
+
+.overview-metric-cell {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #d9d9d9;
+  border-bottom: 1px solid #d9d9d9;
+  background: #fff;
+  text-align: center;
+}
+
+.overview-metric-label {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  background: #f0f0f0;
+  color: #333;
+  font-weight: 700;
+}
+
+.overview-metric-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #078822;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.overview-chart-panel {
+  position: relative;
+  height: 250px;
+  margin-top: 14px;
+  border: 1px solid #d9d9d9;
+  background: #f8fbff;
+  overflow: hidden;
+}
+
+.overview-chart-panel svg {
+  position: absolute;
+  left: 56px;
+  right: 16px;
+  top: 28px;
+  bottom: 34px;
+  width: calc(100% - 72px);
+  height: calc(100% - 62px);
+}
+
+.overview-chart-axis {
+  position: absolute;
+  background: #7288af;
+}
+
+.overview-chart-y {
+  left: 56px;
+  top: 28px;
+  width: 1px;
+  height: calc(100% - 62px);
+}
+
+.overview-chart-x {
+  left: 56px;
+  right: 16px;
+  bottom: 34px;
+  height: 1px;
+}
+
+@media (max-width: 980px) {
+  .overview-plant-panel {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+
+  .overview-metric-table {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .overview-plant-panel,
+  .overview-plant-row {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-plant-icon,
+  .overview-plant-row span {
+    border-right: none;
+  }
+
+  .overview-plant-row span {
+    border-bottom: 1px solid #e5e5e5;
+    background: #f7f7f7;
+  }
+
+  .overview-metric-table {
+    grid-template-columns: 1fr;
+  }
+}
+
 .folder-item {
   text-align: center;
   padding: 10px;
@@ -685,12 +826,170 @@
   flex: 1;
   overflow-y: auto;
   box-sizing: border-box;
+  padding: 8px 8px 12px;
+  background: #f7fbff;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
 
 .child-nav::-webkit-scrollbar {
   display: none;
+}
+
+.overview-sidebar-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overview-menu {
+  flex: 1;
+  padding: 10px 8px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.overview-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  margin-bottom: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.overview-menu-item:hover {
+  background: #f5f5f5;
+}
+
+.overview-menu-item.active {
+  background: #eef3fb;
+  border-color: #b9c7dc;
+  color: #1e3c72;
+}
+
+.overview-menu-dot {
+  font-size: 8px;
+  color: #9ca3af;
+}
+
+.overview-menu-item.active .overview-menu-dot {
+  color: #1e3c72;
+}
+
+.setting-sidebar-view {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f7fbff;
+  color: #1f2f46;
+  box-shadow: inset -1px 0 0 #d7e4f5;
+}
+
+.setting-menu {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 8px 12px;
+  box-sizing: border-box;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.setting-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.setting-menu-group {
+  margin-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid #d8e5f6;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(41, 73, 116, 0.08);
+}
+
+.setting-menu-group-header {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: none;
+  border-bottom: 1px solid #dbe7f6;
+  background: linear-gradient(180deg, #f9fcff 0%, #e8f1fc 100%);
+  color: #1e3c72;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.setting-menu-group-header.collapsed {
+  border-bottom: none;
+  background: linear-gradient(180deg, #fff 0%, #edf5ff 100%);
+}
+
+.setting-menu-toggle {
+  width: 12px;
+  font-size: 11px;
+  color: #4d78ad;
+}
+
+.setting-menu-children {
+  background: #fff;
+}
+
+.setting-menu-item {
+  position: relative;
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px 0 34px;
+  border: none;
+  border-bottom: 1px solid #edf2f8;
+  background: #fff;
+  color: #31435c;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.setting-menu-item:last-child {
+  border-bottom: none;
+}
+
+.setting-menu-item:hover {
+  background: #f0f6ff;
+  color: #1e3c72;
+}
+
+.setting-menu-item.active {
+  color: #123c75;
+  background: linear-gradient(90deg, #dcecff 0%, #eef6ff 78%, #fff 100%);
+  box-shadow: inset 3px 0 0 #1f6fc7;
+}
+
+.setting-menu-active-arrow {
+  position: absolute;
+  right: 9px;
+  color: #8db7e8;
 }
 
 .empty-owner-message {
@@ -742,30 +1041,15 @@
 }
 .title-temp {
   height: 40px;
-  color: #555;
+  color: #1e3c72;
   font-weight: 600;
   display: flex;
   position: relative;
   flex-direction: row;
   box-sizing: border-box;
-  background-color: white;
+  border-bottom: 1px solid #dbe7f6;
+  background: linear-gradient(180deg, #f9fcff 0%, #e8f1fc 100%);
 }
-.toolbar {
-  background-color: #d9d9d9;
-  height: 25px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-size: 12px;
-  color: #555;
-  font-weight: 600;
-  box-sizing: border-box;
-  width: 100%;
-  padding-top: 1vh;
-  padding-bottom: 0.5vh;
-  padding-left: 10px;
-}
-
 .context-data {
   box-sizing: border-box;
   flex: 1;
@@ -1118,5 +1402,158 @@
 :deep(.asset-info-dialog .el-dialog__body) {
   padding: 0;
   background: transparent;
+  overflow: hidden;
+}
+
+:deep(.el-dialog.page-node-dialog) {
+  max-width: 1980px;
+  margin: 0 !important;
+  border-radius: 12px;
+}
+
+:deep(.page-node-dialog .el-dialog__body) {
+  overflow: hidden;
+}
+
+.node-dialog-view {
+  display: flex;
+  flex-direction: column;
+  height: min(720px, calc(100vh - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+}
+
+.node-dialog-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #34518f 100%);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.node-dialog-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.node-dialog-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 12px;
+  border: 1px solid rgba(191, 219, 254, 0.28);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.09);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.node-dialog-title {
+  min-width: 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-dialog-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.node-dialog-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.node-dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.node-dialog-body--flush {
+  padding: 0;
+  background: #f8fafc;
+}
+
+:deep(.node-dialog-body .el-form) {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  :deep(.el-dialog.page-node-dialog) {
+    width: calc(100vw - 24px) !important;
+  }
+
+  .node-dialog-view {
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .node-dialog-topbar {
+    height: 58px;
+    padding: 0 16px;
+  }
+
+  .node-dialog-title {
+    font-size: 16px;
+  }
+
+  .node-dialog-body {
+    padding: 16px;
+  }
+
+  .node-dialog-body--flush {
+    padding: 0;
+  }
+}
+
+@media (max-height: 640px) {
+  .node-dialog-view {
+    height: calc(100vh - 16px);
+    max-height: calc(100vh - 16px);
+  }
+
+  .node-dialog-topbar {
+    height: 52px;
+  }
+
+  .node-dialog-body {
+    padding: 12px;
+  }
+
+  .node-dialog-body--flush {
+    padding: 0;
+  }
 }
 </style>

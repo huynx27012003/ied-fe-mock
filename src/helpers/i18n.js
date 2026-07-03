@@ -259,7 +259,7 @@ export const UI_MESSAGES = {
     resetZoom: "Reset zoom",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
-    // AddOrganisation / AddSubstation fields
+    // Organisation fields
     ownerId: "Owner ID",
     taxCode: "Tax Code",
     parentOrganisation: "Parent Organisation",
@@ -295,7 +295,6 @@ export const UI_MESSAGES = {
     enterIndustry: "Enter industry",
     substationCreatedSuccess: "Substation created successfully",
     organisationCreatedSuccess: "Organisation created successfully",
-    // SystemSettingTab
     visibleParameters: "Visible Parameters",
     allParameters: "All Parameters",
     showSecondaryValues: "Show secondary values",
@@ -647,7 +646,7 @@ export const UI_MESSAGES = {
     resetZoom: "Đặt lại thu phóng",
     zoomIn: "Phóng to",
     zoomOut: "Thu nhỏ",
-    // AddOrganisation / AddSubstation fields
+    // Organisation fields
     ownerId: "ID chủ sở hữu",
     taxCode: "Mã số thuế",
     parentOrganisation: "Đơn vị cha",
@@ -683,7 +682,6 @@ export const UI_MESSAGES = {
     enterIndustry: "Nhập ngành",
     substationCreatedSuccess: "Tạo trạm thành công",
     organisationCreatedSuccess: "Tạo đơn vị thành công",
-    // SystemSettingTab
     visibleParameters: "Tham số hiển thị",
     allParameters: "Tất cả tham số",
     showSecondaryValues: "Hiển thị giá trị thứ cấp",

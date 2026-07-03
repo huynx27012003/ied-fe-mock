@@ -1,11 +1,6 @@
 <template>
   <div class="activity-bar">
     <div class="activity-bar-top">
-      <SidebarToggleButton
-        :collapsed="sidebarCollapsed"
-        @toggle="handleSidebarToggle"
-      />
-
       <ActivityBarItem
         v-for="item in topItems"
         :key="item.id"
@@ -26,7 +21,6 @@
 <script>
 import ActivityBarItem from './activity-bar/ActivityBarItem.vue';
 import HelpCenter from './activity-bar/HelpCenter.vue';
-import SidebarToggleButton from './activity-bar/SidebarToggleButton.vue';
 import WhatsNewDrawer from './activity-bar/WhatsNewDrawer.vue';
 
 export default {
@@ -34,7 +28,6 @@ export default {
   components: {
     ActivityBarItem,
     HelpCenter,
-    SidebarToggleButton,
     WhatsNewDrawer
   },
   props: {
@@ -42,32 +35,30 @@ export default {
       type: String,
       default: 'explorer'
     },
-    sidebarCollapsed: {
-      type: Boolean,
-      default: false
-    }
   },
-  emits: ['view-change', 'toggle-sidebar'],
+  emits: ['view-change'],
   computed: {
     topItems() {
       return [
         {
-          id: 'explorer',
-          icon: 'fa-solid fa-folder-tree',
-          title: this.$tUi('explorerTreeView')
+          id: 'overview',
+          icon: 'fa-solid fa-chart-line',
+          title: 'Overview'
         },
         {
-          id: 'sclImport',
-          icon: 'fa-solid fa-file-import',
-          title: this.$tUi('sclImport')
+          id: 'explorer',
+          icon: 'fa-solid fa-folder-tree',
+          title: 'Monitoring'
+        },
+        {
+          id: 'setting',
+          icon: 'fa-solid fa-gear',
+          title: 'Setting'
         }
       ];
     }
   },
   methods: {
-    handleSidebarToggle() {
-      this.$emit('toggle-sidebar');
-    },
     handleTopClick(item) {
       this.$emit('view-change', item.id);
     },

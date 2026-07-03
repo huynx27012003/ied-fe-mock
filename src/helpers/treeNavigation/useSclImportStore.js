@@ -2,44 +2,6 @@ import { importScl } from "@/api/scl";
 
 export function useSclImportStore() {
   return {
-    openSclManagementByFile(item) {
-      const sclId = item?.sclId;
-      if (sclId == null || sclId === "") {
-        this.$message?.warning?.("Invalid SCL file item");
-        return;
-      }
-
-      const fileName = item?.fileName || `SCL ${sclId}`;
-      this.handleOpenTab({
-        id: `scl-${sclId}-management`,
-        name: `${fileName} - SCL Management`,
-        mode: "sclFile",
-        component: "SCLManagementTab",
-        sclId,
-        fileName,
-        node: {
-          id: String(sclId),
-          sclId,
-          name: fileName,
-          mode: "sclFile",
-        },
-        focusNode: null,
-      });
-    },
-    openSclImportSubtreeTab() {
-      const id = "scl-import-subtree";
-      const fileName = this.sclImportStore?.fileName || "";
-      const tabName = fileName ? `SCL - ${fileName}` : "SCL - Subtree";
-
-      this.handleOpenTab({
-        id,
-        name: tabName,
-        mode: "sclImport",
-        component: "SCLImportSubtreeTab",
-        node: { id, name: tabName, mode: "sclImport" },
-        focusNode: this.sclImportStore?.tableRootNode || null,
-      });
-    },
     handleSCLManagement(node) {
       this.sclTargetNode = node || null;
       this.showSCL = true;

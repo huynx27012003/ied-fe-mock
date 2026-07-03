@@ -51,6 +51,17 @@
           </div>
         </template>
 
+        <template v-if="energyTreeModes.includes(node.mode)">
+          <span class="energy-node-icon" :class="node.mode">
+            <span
+              v-if="energyLeafModes.includes(node.mode)"
+              class="energy-status-dot"
+              :class="node.status || 'online'"
+            ></span>
+            <i :class="energyIconByMode[node.mode]"></i>
+          </span>
+        </template>
+
         <template v-if="node.mode === 'voltageLevel'">
           <img
             :src="icons.voltage"
@@ -384,6 +395,25 @@ export default {
         "parameter",
         "parameterGroup",
       ],
+      energyTreeModes: [
+        "site",
+        "smartLogger",
+        "logger",
+        "inverterGroup",
+        "inverter",
+        "meterGroup",
+        "meter",
+      ],
+      energyLeafModes: ["logger", "inverter", "meter"],
+      energyIconByMode: {
+        site: "fa-solid fa-location-dot",
+        smartLogger: "fa-solid fa-microchip",
+        logger: "fa-solid fa-server",
+        inverterGroup: "fa-solid fa-solar-panel",
+        inverter: "fa-solid fa-solar-panel",
+        meterGroup: "fa-solid fa-gauge-high",
+        meter: "fa-solid fa-gauge-high",
+      },
       icons: {
         collapse: collapseIcon,
         expand: expandIcon,
@@ -905,23 +935,25 @@ export default {
 <style scoped>
 .folder {
   display: block;
-  padding: 3px 1px;
+  padding: 5px 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 13px;
-  color: #555;
-  transition: all 0.3s ease;
+  color: #31435c;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   position: relative;
-  border-radius: 4px;
-  margin: 1cap 0;
+  border-radius: 6px;
+  margin: 2px 6px 2px 0;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .folder:hover {
-  background: rgba(0, 198, 255, 0.08);
-  backdrop-filter: blur(4px);
-  color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: #f0f6ff;
+  color: #1e3c72;
+  border-color: #d9e8fb;
+  box-shadow: 0 2px 7px rgba(41, 73, 116, 0.07);
 }
 
 .folder.drag-over {
@@ -935,14 +967,16 @@ export default {
 
 ul {
   list-style: none;
-  padding-left: 12px;
-  border-left: 1px solid rgba(0, 0, 0, 0.05);
+  padding-left: 14px;
+  border-left: 1px solid #e1ebf7;
 }
 
 .selected {
-  background: linear-gradient(90deg, rgba(0, 123, 255, 0.15) 0%, transparent 100%) !important;
-  color: #0056b3 !important;
+  background: linear-gradient(90deg, #dcecff 0%, #eef6ff 78%, #fff 100%) !important;
+  color: #123c75 !important;
   font-weight: 700;
+  border-color: #bfd8f6;
+  box-shadow: inset 3px 0 0 #1f6fc7;
 }
 
 .icon-wrapper {
@@ -950,6 +984,35 @@ ul {
   align-items: center;
   gap: 12px;
   position: relative;
+}
+
+.energy-node-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 15px;
+  flex: 0 0 18px;
+  color: #54677f;
+}
+
+.energy-status-dot {
+  width: 9px;
+  height: 9px;
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: #62d827;
+  box-shadow: 0 0 3px rgba(98, 216, 39, 0.8);
+}
+
+.energy-status-dot.offline {
+  background: #9ca3af;
+  box-shadow: none;
 }
 
 .toggle-icon-container {
@@ -965,7 +1028,7 @@ ul {
 .toggle-arrow {
   font-size: 12px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #999;
+  color: #5f86b6;
 }
 
 .toggle-arrow.hidden {
@@ -974,23 +1037,24 @@ ul {
 
 .toggle-arrow.rotated {
   transform: rotate(90deg);
-  color: #007bff;
+  color: #1f6fc7;
 }
 
 .accent-line {
   position: absolute;
-  left: -12px;
-  top: 10%;
-  height: 80%;
+  left: 0;
+  top: 12%;
+  height: 76%;
   width: 3px;
-  background: #00d2ff;
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
+  background: #1f6fc7;
   border-radius: 2px;
+  box-shadow: none;
 }
 
 .node-name {
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0;
+  font-weight: 600;
 }
 
 .node-name.name-has-diff {
@@ -1002,11 +1066,11 @@ ul {
 }
 
 img {
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 1px 2px rgba(30, 60, 114, 0.12));
 }
 
 .folder:hover img {
-  transform: scale(1.1);
+  transform: scale(1.06);
   transition: transform 0.2s ease;
 }
 
